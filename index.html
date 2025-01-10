@@ -54,6 +54,10 @@
             font-size: 14px !important;
         }
 
+        .maplibregl-ctrl-geocoder form div button.search-button {
+            padding-left: 4px;
+        }
+
         .speech-bubble {
             position: relative;
             background: #FFFFFF;
@@ -71,6 +75,12 @@
             align-items: center;
             text-align: center;
             box-shadow: 0 2px 5px #33335926;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            0%   { opacity: 0.5; transform: scale(.98);}
+            100% { opacity: 1; transform: scale(1);}
         }
           
         .speech-bubble::after {
@@ -264,14 +274,18 @@
                         message.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.green}" class="speech-bubble-icon">
                             <path d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                             <span class="speech-bubble-title">You're in our service area</span>
                             <span class="speech-bubble-address">${addressTrimmed}</span>
                             <button class="speech-bubble-cta">Get Service Now</button>
-                        </svg>`;
+                        `;
                         message.classList.add('speech-bubble');
                         marker.appendChild(message);
 
+                        const button = document.querySelector('.speech-bubble-cta');
+                        button.addEventListener('click', function() {
+                            window.parent.location.href = 'https://www.example.com';
+                        });
                     } else {
 
                         const marker = document.querySelector('.maplibregl-marker');
@@ -281,10 +295,11 @@
                         message.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.yellow}" class="speech-bubble-icon">
                             <path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
                             <span class="speech-bubble-title">You're outside our standard service area</span>
                             <span class="speech-bubble-address">But we may still be able to help. Please reach out below to inquire</span>
                             <button class="speech-bubble-cta">Contact Us</button>
-                        </svg>`;
+                        `;
                         message.classList.add('speech-bubble');
                         marker.appendChild(message);
 
