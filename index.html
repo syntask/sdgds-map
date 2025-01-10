@@ -69,11 +69,14 @@
             center: center,
             zoom: 9.5,
             TerrainControl: false,
-            interactive: true,
+            interactive: false,
         });
 
 
         map.on('load', function() {
+
+            map.dragPan.disable(); // Prevent scroll interuption on mobile
+            map.scrollZoom.disable(); // Prevent zoom interuption on desktop
             
             // Service area data
             map.addSource('maine', {
@@ -132,6 +135,77 @@
             });
         
             map.addControl(gc, 'top-left');
+
+
+            // MARK: - Geocoder reset button event listener
+            document.querySelector('.svelte-bz0zu3').addEventListener('click', function() {
+
+                const marker = document.querySelector('.maplibregl-marker');
+                if (marker) {
+                    marker.remove();
+                }
+
+                resetView();
+
+            });
+
+
+            // MARK: - Geocoder event listener
+            gc.on('pick', function (e) {
+
+                try {
+
+                    const coords = e.feature.geometry.coordinates;
+                    const polygon = map.getSource('maine')._data.geometry.coordinates[0];
+                    const point = turf.point(coords);
+                    const polygonFeature = turf.polygon([polygon]);
+                    const isInside = turf.booleanPointInPolygon(point, polygonFeature);
+        
+                    if (isInside) {
+
+                        const marker = document.querySelector('.maplibregl-marker');
+                        const message = document.createElement('div');
+                        message.innerHTML = 'You are within our service area.';
+                        message.style.color = '#000000';
+                        message.style.fontSize = '1.2em';
+                        message.style.backgroundColor = '#FFFFFF';
+                        message.style.padding = '8px';
+                        message.style.borderRadius = '12px';
+
+                        marker.appendChild(message);
+
+                        marker.style.display = 'flex';
+                        marker.style.flexDirection = 'column';
+                        marker.style.alignItems = 'center';
+                        marker.style.justifyContent = 'center';
+
+                    } else {
+
+                        const marker = document.querySelector('.maplibregl-marker');
+                        const message = document.createElement('div');
+                        message.innerHTML = 'You are outside our service area.';
+                        message.style.color = '#FFFFFF';
+                        message.style.fontSize = '1.2em';
+                        message.style.backgroundColor = '#FF0000';
+                        message.style.padding = '8px';
+                        message.style.borderRadius = '12px';
+
+                        marker.appendChild(message);
+
+                        marker.style.display = 'flex';
+                        marker.style.flexDirection = 'column';
+                        marker.style.alignItems = 'center';
+                        marker.style.justifyContent = 'center';
+
+                    }
+
+                } catch (e) {
+
+                    console.log('Error:', e);
+
+                }
+
+            });
 
 
             // Helper function to reset the map view to the service area
