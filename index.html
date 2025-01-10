@@ -33,6 +33,14 @@
             width: 100%;
         }
 
+        .maplibregl-canvas-container {
+            pointer-events: none;
+        }
+          
+        .maplibregl-ctrl-geocoder, .maplibregl-ctrl-geocoder * {
+            pointer-events: auto !important;
+    }          
+
         .maplibregl-ctrl-attrib.maplibregl-compact {
             margin: 20px;
         }
@@ -74,17 +82,6 @@
 
 
         map.on('load', function() {
-
-            map.on('touchstart', event => {
-                const e = event.originalEvent;
-                if (e && 'touches' in e) {
-                    if (e.touches.length > 1) {
-                        this.map.dragPan.enable();
-                    } else {
-                        this.map.dragPan.disable();
-                    }
-                }
-            });
             
             // Service area data
             map.addSource('maine', {
