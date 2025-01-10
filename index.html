@@ -50,6 +50,79 @@
             border-radius: 12px !important;
         }
 
+        .maplibregl-ctrl-geocoder form div input{
+            font-size: 14px !important;
+        }
+
+        .speech-bubble {
+            position: relative;
+            background: #FFFFFF;
+            color: #000000;
+            width: 300px;
+            padding: 16px;
+            border-radius: 10px;
+            margin: 50px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 2px 5px #33335926;
+        }
+          
+        .speech-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%); 
+            border: 10px solid transparent;
+            border-top-color: #FFFFFF;
+        }
+
+        .speech-bubble-icon {
+            height: 64px;
+            width: 64px;
+            margin-bottom: 12px;
+        }
+
+        .speech-bubble-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .speech-bubble-address {
+            color: #79797f;
+            margin-bottom: 12px;
+        }
+
+        .speech-bubble-message {
+            margin-bottom: 8px;
+        }
+
+        .speech-bubble-cta {
+            background: #000000;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* 16px on mobile to prevent auto zooming */
+
+        @media screen and (max-width: 600px) {
+            .maplibregl-ctrl-geocoder form div input{
+                font-size: 16px !important;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -62,15 +135,27 @@
         const center = [-111.79, 33.425];
 
 
+        // System colors
+        const color = {
+            red: '#ff3b30',
+            orange: '#ff9500',
+            yellow: '#ffcc00',
+            green: '#34c759',
+            blue: '#208cf5'
+        };
+
+
         // MARK: - Map initializer
         const map = new maplibregl.Map({
             container: 'map',
             style: style + '?key=' + API_KEY,
             center: center,
             zoom: 9.5,
-            TerrainControl: false,
-            interactive: true,
+            interactive: false,
         });
+
+        // Collapse the attribution control on load
+        document.querySelector('.maplibregl-ctrl-attrib').classList.remove('maplibregl-compact-show');
 
 
         map.on('load', function() {
@@ -94,8 +179,8 @@
                 'source': 'maine',
                 'layout': {},
                 'paint': {
-                    'fill-color': '#0092ff',
-                    'fill-opacity': 0.4
+                    'fill-color': color.blue,
+                    'fill-opacity': 0.2
                 }
             }, "Road labels"); // Render underneath map labels
 
@@ -109,7 +194,7 @@
                     'line-cap': 'round'
                 },
                 'paint': {
-                    'line-color': '#0092ff',
+                    'line-color': color.blue,
                     'line-width': 3,
                     'line-dasharray': [1, 2]
                 }
@@ -122,7 +207,7 @@
                 maplibregl,
                 country: 'us',
                 noResultsMessage: 'No results found.',
-                placeholder: `Check if you're in our service area`,
+                placeholder: `See if you're in our service area`,
                 types: ['address'],
                 proximity: [-111.79, 33.425],
                 zoom: 18,
@@ -135,7 +220,11 @@
 
 
             // MARK: - Geocoder reset button event listener
-            document.querySelector('.svelte-bz0zu3').addEventListener('click', function() {
+            // The clear button is a button element inside a div with the class "clear-button-container"
+
+            const clearButton = document.querySelector('.clear-button-container button');
+
+            clearButton.addEventListener('click', function() {
 
                 const marker = document.querySelector('.maplibregl-marker');
                 if (marker) {
@@ -157,42 +246,47 @@
                     const point = turf.point(coords);
                     const polygonFeature = turf.polygon([polygon]);
                     const isInside = turf.booleanPointInPolygon(point, polygonFeature);
+                    const address = e.feature.place_name;
+                    // remove ", United States" from address if present
+                    const addressTrimmed = address.replace(', United States', '');
+
+                    // const center = turf.point([-111.79, 33.425]);
+                    // const distance = turf.distance(center, point, {units: 'miles'});
+                    // const travelTime = Math.round(distance * 4);
+                    // const roundedTravelTime = Math.ceil(travelTime / 5) * 5;
         
                     if (isInside) {
 
                         const marker = document.querySelector('.maplibregl-marker');
+                        const pin = marker.querySelector('svg');
+                        pin.remove();
                         const message = document.createElement('div');
-                        message.innerHTML = 'You are within our service area.';
-                        message.style.color = '#000000';
-                        message.style.fontSize = '1.2em';
-                        message.style.backgroundColor = '#FFFFFF';
-                        message.style.padding = '8px';
-                        message.style.borderRadius = '12px';
-
+                        message.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.green}" class="speech-bubble-icon">
+                            <path d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            <span class="speech-bubble-title">You're in our service area</span>
+                            <span class="speech-bubble-address">${addressTrimmed}</span>
+                            <button class="speech-bubble-cta">Get Service Now</button>
+                        </svg>`;
+                        message.classList.add('speech-bubble');
                         marker.appendChild(message);
-
-                        marker.style.display = 'flex';
-                        marker.style.flexDirection = 'column';
-                        marker.style.alignItems = 'center';
-                        marker.style.justifyContent = 'center';
 
                     } else {
 
                         const marker = document.querySelector('.maplibregl-marker');
+                        const pin = marker.querySelector('svg');
+                        pin.remove();
                         const message = document.createElement('div');
-                        message.innerHTML = 'You are outside our service area.';
-                        message.style.color = '#FFFFFF';
-                        message.style.fontSize = '1.2em';
-                        message.style.backgroundColor = '#FF0000';
-                        message.style.padding = '8px';
-                        message.style.borderRadius = '12px';
-
+                        message.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.yellow}" class="speech-bubble-icon">
+                            <path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            <span class="speech-bubble-title">You're outside our standard service area</span>
+                            <span class="speech-bubble-address">But we may still be able to help. Please reach out below to inquire</span>
+                            <button class="speech-bubble-cta">Contact Us</button>
+                        </svg>`;
+                        message.classList.add('speech-bubble');
                         marker.appendChild(message);
-
-                        marker.style.display = 'flex';
-                        marker.style.flexDirection = 'column';
-                        marker.style.alignItems = 'center';
-                        marker.style.justifyContent = 'center';
 
                     }
 
@@ -218,12 +312,6 @@
             }
 
             resetView();
-
-            // Collapse the attribution control on load
-            const attrib = document.querySelector('.maplibregl-ctrl-attrib');
-            attrib.classList.remove('maplibregl-compact-show');
-            attrib.attributes.removeNamedItem('show');
-
 
         });
         
