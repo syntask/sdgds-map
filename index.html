@@ -33,6 +33,10 @@
             width: 100%;
         }
 
+        .maplibregl-canvas-container {
+            pointer-events: none;
+        }
+
         .maplibregl-ctrl-attrib.maplibregl-compact {
             margin: 20px;
         }
@@ -74,9 +78,6 @@
 
 
         map.on('load', function() {
-
-            map.dragPan.disable(); // Prevent scroll interuption on mobile
-            map.scrollZoom.disable(); // Prevent zoom interuption on desktop
             
             // Service area data
             map.addSource('maine', {
