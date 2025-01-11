@@ -1,6 +1,6 @@
 <!--
 
-COPYRIGHT AND LICENSING NOTICE - January 10th, 2025
+COPYRIGHT AND LICENSING NOTICE - January 11th, 2025
 
 This application, including its source code, is the intellectual property of Isaac Neumann ("Author"). 4th Street Agency, L.L.P. ("Licensee") is granted a non-exclusive, perpetual, royalty-free license to use, modify, and distribute this code as part of the website for Same Day Garage Door Services, L.L.C.. This license applies solely to the specific project for which this code was developed. The Author retains the right to use, modify, distribute, and license this code for other projects or clients.
 
@@ -140,6 +140,12 @@ The application is provided "as is," without warranty of any kind, express or im
         .maplibregl-ctrl-geocoder form ul li {
             cursor: pointer !important;
             animation: none !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        .maplibregl-ctrl-geocoder form ul li img{
+            display: none !important;
         }
 
         .maplibregl-ctrl-geocoder form div.no-results {
@@ -206,16 +212,27 @@ The application is provided "as is," without warranty of any kind, express or im
 
         .speech-bubble-cta {
             font-family: var(--font) !important;
-            background: #000000;
+            background: rgb(37, 37, 37);
             color: #FFFFFF;
             font-weight: bold;
             font-size: 16px;
             padding: 12px 24px;
             margin-top: 6px;
             margin-bottom: 6px;
-            border: none;
-            border-radius: 8px;
+            border: 3px solid rgb(37, 37, 37);
+            border-radius: 16px;
             cursor: pointer;
+            box-shadow: 0 0 6px 0px #33335900;
+            transition: box-shadow .1s ease-in-out;
+        }
+
+        .speech-bubble-cta:hover {
+            border: 3px solid rgb(255, 255, 255);
+            box-shadow: 0 0 6px 0px #33335955;
+        }
+
+        .speech-bubble-cta:active {
+            transform: scale(.98);
         }
 
     </style>
@@ -254,7 +271,7 @@ The application is provided "as is," without warranty of any kind, express or im
         map.on('load', function() {
             
 
-            map.addSource('maine', {
+            map.addSource('serviceArea', {
                 'type': 'geojson',
                 'data': {
                     'type': 'Feature',
@@ -268,9 +285,9 @@ The application is provided "as is," without warranty of any kind, express or im
 
             // Service area fill layer
             map.addLayer({
-                'id': 'maine',
+                'id': 'serviceAreaFill',
                 'type': 'fill',
-                'source': 'maine',
+                'source': 'serviceArea',
                 'layout': {},
                 'paint': {
                     'fill-color': color.blue,
@@ -281,9 +298,9 @@ The application is provided "as is," without warranty of any kind, express or im
 
             // Service area outline layer
             map.addLayer({
-                'id': 'maine-outline',
+                'id': 'serviceAreaOutline',
                 'type': 'line',
-                'source': 'maine',
+                'source': 'serviceArea',
                 'layout': {
                     'line-join': 'round',
                     'line-cap': 'round'
@@ -329,7 +346,7 @@ The application is provided "as is," without warranty of any kind, express or im
                 try {
                     // Initialize variables
                     const coords = e.feature.geometry.coordinates;
-                    const polygon = map.getSource('maine')._data.geometry.coordinates[0];
+                    const polygon = map.getSource('serviceArea')._data.geometry.coordinates[0];
                     const point = turf.point(coords);
                     const polygonFeature = turf.polygon([polygon]);
                     const isInside = turf.booleanPointInPolygon(point, polygonFeature);
@@ -436,7 +453,7 @@ The application is provided "as is," without warranty of any kind, express or im
             // Helper function to reset the map view to the service area
             function resetView() {
                 const bounds = new maplibregl.LngLatBounds();
-                const coordinates = map.getSource('maine')._data.geometry.coordinates[0];
+                const coordinates = map.getSource('serviceArea')._data.geometry.coordinates[0];
                 coordinates.forEach(function (coordinate) {
                     bounds.extend(coordinate);
                 });
