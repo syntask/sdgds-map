@@ -1,8 +1,40 @@
+<!--
+
+COPYRIGHT AND LICENSING NOTICE - January 10th, 2025
+
+This application, including its source code, is the intellectual property of Isaac Neumann ("Author"). 4th Street Agency, L.L.P. ("Licensee") is granted a non-exclusive, perpetual, royalty-free license to use, modify, and distribute this code as part of the website for Same Day Garage Door Services, L.L.C.. This license applies solely to the specific project for which this code was developed. The Author retains the right to use, modify, distribute, and license this code for other projects or clients.
+
+
+THIRD-PARTY LIBRARIES
+
+This application integrates the following third-party libraries, each governed by its respective license:
+
+- MapLibre GL JS (MIT License): https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt
+- MapTiler Geocoding Control and Tiles (Refer to MapTiler Terms): https://www.maptiler.com/terms/
+- Turf.js (MIT License): https://github.com/Turfjs/turf/blob/master/LICENSE
+- Google Fonts: Lexend (SIL Open Font License) https://developers.google.com/fonts/faq
+
+The Author and Licensee must comply with these licenses when using, modifying, or redistributing the application.
+
+
+RESTRICTIONS
+
+The Licensee may not sublicense or sell the application as a standalone product.
+Any reuse or redistribution of the application must retain this copyright and licensing notice, along with the third-party licenses referenced above.
+
+DISCLAIMER
+
+The application is provided "as is," without warranty of any kind, express or implied. The Author is not liable for any damages arising from the use of this application.
+
+
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 
+    <title>Service Area Map</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="initial-scale=1,width=device-width,viewport-fit=cover" />
 
@@ -17,46 +49,106 @@
     <!-- Import Turf.js -->
     <script src="https://unpkg.com/@turf/turf@latest"></script>
 
+    <!-- Import fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+
     <style>
+
+        /* Page setup */
 
         body {
             margin: 0;
             padding: 0;
             height: 100vh;
             width: 100vw;
+            --font: 'Lexend', sans-serif;
+            font-family: var(--font);
         }
 
         #map {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 100%;
-        }      
-
-        .maplibregl-ctrl-attrib.maplibregl-compact {
-            margin: 20px;
+            left: 0;
+            right: 0;
         }
 
+        /* Pointer event management */
+
+        #map {
+            pointer-events: none;
+        }
+
+        .speech-bubble {
+            pointer-events: auto;
+        }
+
+
+
+        /* Map attribution */
+
+        .maplibregl-ctrl-attrib.maplibregl-compact {
+            margin: 32px;
+        }
+
+
+
+        /* Geocoding control */
+
         .maplibregl-ctrl-top-left .maplibregl-ctrl {
-            margin: 20px 0 0 20px;
+            margin: 32px 0 0 32px;
         }
 
         .maplibregl-ctrl-geocoder form {
+            font-family: var(--font) !important;
             border-radius: 12px !important;
+            width: 300px !important;
+            min-width: 300px !important;
+            max-width: 300px !important;
         }
 
         .maplibregl-ctrl-geocoder form div {
             padding: 8px;
-            border-radius: 12px !important;
+            border-radius: 16px !important;
         }
 
         .maplibregl-ctrl-geocoder form div input{
             font-size: 14px !important;
         }
 
+        /* 16px on mobile to prevent auto zooming */
+        @media screen and (max-width: 600px) {
+            .maplibregl-ctrl-geocoder form div input{
+                font-size: 16px !important;
+            }
+        }
+
+        .maplibregl-ctrl-geocoder form div div.clear-button-container, .maplibregl-ctrl-geocoder form div div.clear-button-container button{
+            cursor: pointer !important;
+        }
+
         .maplibregl-ctrl-geocoder form div button.search-button {
             padding-left: 4px;
         }
+
+        .maplibregl-ctrl-geocoder form ul {
+            border-radius: 16px !important;
+        }
+
+        .maplibregl-ctrl-geocoder form ul li {
+            cursor: pointer !important;
+            animation: none !important;
+        }
+
+        .maplibregl-ctrl-geocoder form div.no-results {
+            display: none !important;
+        }
+
+
+
+        /* Speech bubble */
 
         .speech-bubble {
             position: relative;
@@ -64,23 +156,24 @@
             color: #000000;
             width: 300px;
             padding: 16px;
-            border-radius: 10px;
+            border-radius: 16px;
             margin: 50px;
-            font-family: Arial, sans-serif;
+            font-family: var(--font) !important;
             font-size: 14px;
             transform: translateY(-50%);
+            transform-origin: (bottom, center);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
             box-shadow: 0 2px 5px #33335926;
-            animation: fadeIn 0.3s ease-in-out forwards;
+            animation: fadeIn .3s ease-in-out forwards;
         }
 
         @keyframes fadeIn {
-            0%   { opacity: 0.5; transform: scale(.98);}
-            100% { opacity: 1; transform: scale(1);}
+            0%   { opacity: 0.6; transform: scale(.5) translateY(-48%);}
+            100% { opacity: 1; transform: scale(1) translateY(-50%);}
         }
           
         .speech-bubble::after {
@@ -105,32 +198,24 @@
             margin-bottom: 8px;
         }
 
-        .speech-bubble-address {
+        .speech-bubble-message {
             color: #79797f;
             margin-bottom: 12px;
-        }
-
-        .speech-bubble-message {
-            margin-bottom: 8px;
+            font-weight: 300;
         }
 
         .speech-bubble-cta {
+            font-family: var(--font) !important;
             background: #000000;
             color: #FFFFFF;
             font-weight: bold;
             font-size: 16px;
             padding: 12px 24px;
+            margin-top: 6px;
+            margin-bottom: 6px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-        }
-
-        /* 16px on mobile to prevent auto zooming */
-
-        @media screen and (max-width: 600px) {
-            .maplibregl-ctrl-geocoder form div input{
-                font-size: 16px !important;
-            }
         }
 
     </style>
@@ -139,13 +224,10 @@
     <div id="map"></div>
     <script>
 
-        // MARK: - Global variables
+        // Global variables
         const API_KEY = 'uxGPO18AyvxUdEGKe02K';
         const style = 'https://api.maptiler.com/maps/streets-v2/style.json';
         const center = [-111.79, 33.425];
-
-
-        // System colors
         const color = {
             red: '#ff3b30',
             orange: '#ff9500',
@@ -155,7 +237,7 @@
         };
 
 
-        // MARK: - Map initializer
+        // Map initializer
         const map = new maplibregl.Map({
             container: 'map',
             style: style + '?key=' + API_KEY,
@@ -164,13 +246,14 @@
             interactive: false,
         });
 
+
         // Collapse the attribution control on load
         document.querySelector('.maplibregl-ctrl-attrib').classList.remove('maplibregl-compact-show');
 
 
         map.on('load', function() {
             
-            // Service area data
+
             map.addSource('maine', {
                 'type': 'geojson',
                 'data': {
@@ -181,6 +264,7 @@
                     }
                 }
             });
+
 
             // Service area fill layer
             map.addLayer({
@@ -193,6 +277,7 @@
                     'fill-opacity': 0.2
                 }
             }, "Road labels"); // Render underneath map labels
+
 
             // Service area outline layer
             map.addLayer({
@@ -211,7 +296,7 @@
             }, "Road labels"); // Render underneath map labels
 
 
-            // MARK: - Geocoder initializer
+            //Geocoder initializer
             const gc = new maplibreglMaptilerGeocoder.GeocodingControl({
                 apiKey: API_KEY,
                 maplibregl,
@@ -220,97 +305,131 @@
                 placeholder: `See if you're in our service area`,
                 types: ['address'],
                 proximity: [-111.79, 33.425],
-                zoom: 18,
+                zoom: 9.5,
                 showPlaceType: 'false',
                 showFullGeometry: false
 
             });
-        
             map.addControl(gc, 'top-left');
 
 
-            // MARK: - Geocoder reset button event listener
-            // The clear button is a button element inside a div with the class "clear-button-container"
-
+            // Geocoder reset button event listener (clear the map markers and reset the view)
             const clearButton = document.querySelector('.clear-button-container button');
-
             clearButton.addEventListener('click', function() {
-
                 const marker = document.querySelector('.maplibregl-marker');
                 if (marker) {
                     marker.remove();
                 }
-
                 resetView();
-
             });
 
 
-            // MARK: - Geocoder event listener
+            // Geocoder pick event listener (custom flyTo and popup)
             gc.on('pick', function (e) {
-
                 try {
-
+                    // Initialize variables
                     const coords = e.feature.geometry.coordinates;
                     const polygon = map.getSource('maine')._data.geometry.coordinates[0];
                     const point = turf.point(coords);
                     const polygonFeature = turf.polygon([polygon]);
                     const isInside = turf.booleanPointInPolygon(point, polygonFeature);
-                    const address = e.feature.place_name;
-                    // remove ", United States" from address if present
-                    const addressTrimmed = address.replace(', United States', '');
+                    const addressRaw = e.feature.place_name;
+                    const addressTrimmed = addressRaw.replace(', United States', '');
+                    const addressLine1 = addressTrimmed.split(',')[0];
+                    const addressLine2 = addressTrimmed.split(',').slice(1).join(',');
 
-                    // const center = turf.point([-111.79, 33.425]);
-                    // const distance = turf.distance(center, point, {units: 'miles'});
-                    // const travelTime = Math.round(distance * 4);
-                    // const roundedTravelTime = Math.ceil(travelTime / 5) * 5;
-        
+                    // Manually recenter after geocoding picks a location (to account for popup size)
+                    map.flyTo({
+                        center: coords,
+                        zoom: 9.5,
+                        offset: [0, 120] 
+                    });
+            
                     if (isInside) {
-
+                        // Within service area
                         const marker = document.querySelector('.maplibregl-marker');
                         const pin = marker.querySelector('svg');
                         pin.remove();
+            
                         const message = document.createElement('div');
                         message.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.green}" class="speech-bubble-icon">
-                            <path d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.green}" class="speech-bubble-icon">
+                                <path d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 
+                                        10 10 10 10-4.48 10-10S17.52 2 
+                                        12 2zm-2 15-5-5 
+                                        1.41-1.41L10 14.17l7.59-7.59L19 
+                                        8l-9 9z"/>
+                            </svg>
                             <span class="speech-bubble-title">You're in our service area</span>
-                            <span class="speech-bubble-address">${addressTrimmed}</span>
+                            <span class="speech-bubble-message">${addressLine1}<br>${addressLine2}</span>
                             <button class="speech-bubble-cta">Get Service Now</button>
                         `;
                         message.classList.add('speech-bubble');
                         marker.appendChild(message);
-
+            
                         const button = document.querySelector('.speech-bubble-cta');
                         button.addEventListener('click', function() {
                             window.parent.location.href = 'https://www.example.com';
                         });
+            
                     } else {
-
+                        // Outside service area
                         const marker = document.querySelector('.maplibregl-marker');
                         const pin = marker.querySelector('svg');
                         pin.remove();
+            
                         const message = document.createElement('div');
                         message.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color.yellow}" class="speech-bubble-icon">
-                            <path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
+                                 fill="${color.yellow}" class="speech-bubble-icon">
+                                <path d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M12 2C6.48 2 2 6.48 
+                                         2 12s4.48 10 10 10 10-4.48 
+                                         10-10S17.52 2 12 2zm1 
+                                         15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                             </svg>
-                            <span class="speech-bubble-title">You're outside our standard service area</span>
-                            <span class="speech-bubble-address">But we may still be able to help. Please reach out below to inquire</span>
+                            <span class="speech-bubble-title">
+                                You're outside our standard service area
+                            </span>
+                            <span class="speech-bubble-message">
+                                But we may still be able to help. 
+                                Please reach out below to inquire.
+                            </span>
                             <button class="speech-bubble-cta">Contact Us</button>
                         `;
                         message.classList.add('speech-bubble');
                         marker.appendChild(message);
-
                     }
-
+            
                 } catch (e) {
-
                     console.log('Error:', e);
-
                 }
+            });
 
+
+            // Remove extraneous suggestions from the geocoder and clean up the address
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    const suggestions = document.querySelectorAll('.maplibregl-ctrl-geocoder form ul li');
+                    suggestions.forEach(function(suggestion) {
+                        if (suggestion.innerHTML.includes('street.svg')) {
+                            suggestion.remove();
+                        }
+                        suggestionLine2s = suggestion.querySelectorAll('span span.line2');
+                        suggestionLine2s.forEach(function(suggestionLine2) {
+                            if (suggestionLine2.innerHTML.includes('United States')) {
+                                suggestionLine2.innerHTML = suggestionLine2.innerHTML.replace(', United States', '');
+                            }
+                        });
+
+                    });
+
+                });
+            });
+            observer.observe(document, {
+                childList: true,
+                subtree: true
             });
 
 
@@ -325,12 +444,11 @@
                     padding: 40
                 });
             }
-
             resetView();
+
 
         });
         
-
 
     </script>
 </body>
