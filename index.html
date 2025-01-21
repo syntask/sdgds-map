@@ -631,6 +631,8 @@
             
                         const button = document.querySelector('.speech-bubble-cta');
                         button.addEventListener('click', function() {
+                            const currentUrl = window.top.location.href;
+                            alert(currentUrl);
                             window.top.location.href = '/get-service';
                         });
             
