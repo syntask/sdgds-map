@@ -241,6 +241,7 @@
             green: '#34c759',
             blue: '#208cf5'
         };
+        const getServiceTarget = 'https://grounded-accessibility-410901.framer.app/get-service';
 
 
         // Map initializer
@@ -632,8 +633,7 @@
                         const button = document.querySelector('.speech-bubble-cta');
                         button.addEventListener('click', function() {
                             const currentUrl = window.top.location.href;
-                            alert(currentUrl);
-                            window.top.location.href = '/get-service';
+                            window.top.location.href = getServiceTarget;
                         });
             
                     } else {
@@ -666,7 +666,7 @@
 
                         const button = document.querySelector('.speech-bubble-cta');
                         button.addEventListener('click', function() {
-                            window.top.location.href = '/get-service';
+                            window.top.location.href = getServiceTarget;
                         });
                     }
             
